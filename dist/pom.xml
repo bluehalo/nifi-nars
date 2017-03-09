@@ -11,6 +11,10 @@
     <artifactId>nifi-nars-dist</artifactId>
     <packaging>pom</packaging>
 
+    <properties>
+        <assembly.name>asymmetrik-nifi-nars-${project.version}</assembly.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.asymmetrik.nifi</groupId>
@@ -49,10 +53,6 @@
             <type>nar</type>
         </dependency>
     </dependencies>
-
-    <properties>
-        <assembly.name>nifi-nars-${project.version}</assembly.name>
-    </properties>
 
     <build>
         <plugins>

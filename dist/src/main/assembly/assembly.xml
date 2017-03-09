@@ -5,6 +5,7 @@
     <id>assembly</id>
 
     <formats>
+        <format>dir</format>
         <format>tar.gz</format>
     </formats>
 
