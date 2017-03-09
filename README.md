@@ -33,7 +33,7 @@ For example:
 
 ```
 nifi.nar.library.directory=./lib
-nifi.nar.library.directory.ext1=/path/to/asymm-nifi-nars/dist/target/asymmetrik-nifi-nars-0.1.0-SNAPSHOT
+nifi.nar.library.directory.ext1=/path/to/asymm-nifi-nars/dist/target/asymmetrik-nifi-nars-0.1.0-SNAPSHOT/asymmetrik-nifi-nars-0.1.0-SNAPSHOT
 ```
 
 Then start NiFi as you normally would:
