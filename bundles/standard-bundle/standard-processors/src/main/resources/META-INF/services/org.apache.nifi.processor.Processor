@@ -1,0 +1,12 @@
+com.asymmetrik.nifi.standard.processors.AutoTerminator
+com.asymmetrik.nifi.standard.processors.CreateContent
+com.asymmetrik.nifi.standard.processors.CreateJsonContent
+com.asymmetrik.nifi.standard.processors.DelayProcessor
+com.asymmetrik.nifi.standard.processors.GetWebpage
+com.asymmetrik.nifi.standard.processors.IdentifyDuplicate
+com.asymmetrik.nifi.standard.processors.InspectZipContents
+com.asymmetrik.nifi.standard.processors.Md5HashAttributes
+com.asymmetrik.nifi.standard.processors.PutScp
+com.asymmetrik.nifi.standard.processors.RouteOnBackPressure
+com.asymmetrik.nifi.standard.processors.stats.CalculateLatencyStatistics
+com.asymmetrik.nifi.standard.processors.stats.CalculateVolumeStatistics

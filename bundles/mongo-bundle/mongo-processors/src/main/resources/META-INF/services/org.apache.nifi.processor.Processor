@@ -1,0 +1,4 @@
+com.asymmetrik.nifi.mongo.processors.CreateObjectId
+com.asymmetrik.nifi.mongo.processors.QueryMongo
+com.asymmetrik.nifi.mongo.processors.StoreInMongo
+com.asymmetrik.nifi.mongo.processors.UpdateMongo
