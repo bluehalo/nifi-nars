@@ -179,5 +179,16 @@
         <url>https://github.com/Asymmetrik</url>
     </scm>
 
+    <distributionManagement>
+        <repository>
+            <id>asymmetrik-releases</id>
+            <url>https://34.205.201.99:8443/nexus/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>asymmetrik-snapshots</id>
+            <url>https://34.205.201.99:8443/nexus/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
 </project>
 
