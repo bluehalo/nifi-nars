@@ -13,6 +13,12 @@
 
     <properties>
         <assembly.name>asymmetrik-nifi-nars-${project.version}</assembly.name>
+        <rpm.install.basedir>/opt/asymmetrik/nifi-nars</rpm.install.basedir>
+        <rpm.install.group>nifi</rpm.install.group>
+        <rpm.install.user>nifi</rpm.install.user>
+        <rpm.name>asymmetrik-nifi-nars</rpm.name>
+        <rpm.group>Utilities</rpm.group>
+        <rpm.summary>Asymmetrik NiFi Nars</rpm.summary>
     </properties>
 
     <dependencies>
@@ -83,4 +89,72 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>rpm</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.8</version>
+                        <configuration>
+                            <target>
+                                <!-- untar the assembly -->
+                                <untar compression="gzip" dest="${project.build.directory}/assembly-unpacked" src="${project.build.directory}/${assembly.name}.tar.gz" />
+                            </target>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>untar-assembly</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>rpm-maven-plugin</artifactId>
+                        <configuration>
+                            <name>${rpm.name}</name>
+                            <group>${rpm.group}</group>
+                            <summary>${rpm.summary}</summary>
+                            <defaultGroupname>${rpm.install.group}</defaultGroupname>
+                            <defaultUsername>${rpm.install.user}</defaultUsername>
+                            <defaultFilemode>644</defaultFilemode>
+                            <defaultDirmode>755</defaultDirmode>
+                            <targetOS>linux</targetOS>
+                            <requires>
+                                <require>nifi &gt;= ${nifi.version}</require>
+                            </requires>
+                            <mappings>
+                                <mapping>
+                                    <directory>${rpm.install.basedir}</directory>
+                                    <sources>
+                                        <source>
+                                            <!-- use the untar'd assembly as is -->
+                                            <location>${project.build.directory}/assembly-unpacked</location>
+                                        </source>
+                                    </sources>
+                                </mapping>
+                            </mappings>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>create-rpm</id>
+                                <goals>
+                                    <goal>attached-rpm</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
