@@ -182,11 +182,11 @@
     <distributionManagement>
         <repository>
             <id>asymmetrik-releases</id>
-            <url>https://34.205.201.99:8443/nexus/content/repositories/releases</url>
+            <url>https://nexus.asymmetrik.com/content/repositories/releases</url>
         </repository>
         <snapshotRepository>
             <id>asymmetrik-snapshots</id>
-            <url>https://34.205.201.99:8443/nexus/content/repositories/snapshots</url>
+            <url>https://nexus.asymmetrik.com/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 
