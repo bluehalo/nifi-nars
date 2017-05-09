@@ -1,14 +1,14 @@
 package com.asymmetrik.nifi.mongo.processors;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoBulkWriteException;
@@ -22,14 +22,17 @@ import org.apache.nifi.annotation.behavior.SupportsBatching;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
+import org.apache.nifi.components.AllowableValue;
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.components.ValidationContext;
+import org.apache.nifi.components.ValidationResult;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.exception.ProcessException;
-import org.apache.nifi.processor.io.InputStreamCallback;
+import org.apache.nifi.processor.util.StandardValidators;
 import org.bson.Document;
 
 @SupportsBatching
@@ -37,7 +40,31 @@ import org.bson.Document;
 @CapabilityDescription("Performs a mongo inserts of JSON/BSON.")
 public class StoreInMongo extends AbstractMongoProcessor {
 
-    private List<PropertyDescriptor> props = Arrays.asList(MongoProps.MONGO_SERVICE, MongoProps.DATABASE, MongoProps.COLLECTION, MongoProps.WRITE_CONCERN, MongoProps.INDEX, MongoProps.BATCH_SIZE, MongoProps.ORDERED);
+    private static final List<AllowableValue> insertCommandChoices = ImmutableList.of(
+            new AllowableValue("content", "flowfile-content", "retrieves insert command from flowfile content"),
+            new AllowableValue("attribute", "flowfile-attribute", "retrieves insert command from specified flowfile attribute")
+    );
+
+    public static final PropertyDescriptor INSERT_COMMAND_SOURCE = new PropertyDescriptor.Builder()
+            .name("Insert command source")
+            .description("Indicates whether the source of the insert command is retrieved from flowfile attribute or content")
+            .allowableValues(insertCommandChoices.toArray(new AllowableValue[insertCommandChoices.size()]))
+            .defaultValue(insertCommandChoices.get(0).getValue())
+            .required(true)
+            .build();
+
+    public static final PropertyDescriptor INSERT_COMMAND_ATTRIBUTE = new PropertyDescriptor.Builder()
+            .name("Insert command attribute")
+            .description("The attribute evaluated to retrieve the json insert command. Only applicable if 'Insert command source' is 'flowfile-attribute'")
+            .required(false)
+            .addValidator((subject, value, context) -> (new ValidationResult.Builder()).subject(subject).input(value).explanation("always valid").valid(true).build())
+            .expressionLanguageSupported(true)
+            .build();
+
+    private List<PropertyDescriptor> props = Arrays.asList(INSERT_COMMAND_SOURCE, INSERT_COMMAND_ATTRIBUTE,
+            MongoProps.MONGO_SERVICE, MongoProps.DATABASE, MongoProps.COLLECTION, MongoProps.WRITE_CONCERN,
+            MongoProps.INDEX, MongoProps.BATCH_SIZE, MongoProps.ORDERED);
+
     private BulkWriteOptions writeOptions;
 
     @Override
@@ -45,6 +72,20 @@ public class StoreInMongo extends AbstractMongoProcessor {
         properties = Collections.unmodifiableList(props);
         relationships = Collections.unmodifiableSet(Sets.newHashSet(REL_SUCCESS, REL_FAILURE));
         clientId = getIdentifier();
+    }
+
+    @Override
+    protected Collection<ValidationResult> customValidate(final ValidationContext validationContext) {
+        List<ValidationResult> results = new ArrayList<>();
+
+        if (validationContext.getProperty(INSERT_COMMAND_SOURCE).getValue().equals("attribute")) {
+            results.add(StandardValidators.NON_BLANK_VALIDATOR.validate(
+                    INSERT_COMMAND_ATTRIBUTE.getName(),
+                    validationContext.getProperty(INSERT_COMMAND_ATTRIBUTE).getValue(),
+                    validationContext));
+        }
+
+        return results;
     }
 
     @OnScheduled
@@ -67,6 +108,8 @@ public class StoreInMongo extends AbstractMongoProcessor {
 
         ComponentLog logger = this.getLogger();
 
+        final String source = context.getProperty(INSERT_COMMAND_SOURCE).getValue();
+
         List<InsertOneModel<Document>> documentsToInsert = new ArrayList<>(flowFiles.size());
 
         /*
@@ -77,13 +120,23 @@ public class StoreInMongo extends AbstractMongoProcessor {
 
         logger.debug("Attempting to batch insert {} FlowFiles", new Object[]{flowFiles.size()});
         for (FlowFile flowFile : flowFiles) {
-            StringStreamCallback stringStreamCallback = new StringStreamCallback();
-            session.read(flowFile, stringStreamCallback);
+
+            final String payload;
 
             try {
-
-                String payload = stringStreamCallback.getText();
-                logger.debug("Found payload {}", new Object[]{payload});
+                switch (source) {
+                    case "content":
+                        final String[] result = new String[1];
+                        session.read(flowFile, (in) -> result[0] = IOUtils.toString(in));
+                        payload = result[0];
+                        break;
+                    case "attribute":
+                        String command = context.getProperty(INSERT_COMMAND_ATTRIBUTE).evaluateAttributeExpressions(flowFile).getValue();
+                        payload = flowFile.getAttribute(command);
+                        break;
+                    default:
+                        throw new Exception("Invalid source choice: " + source);
+                }
 
                 BasicDBObject parse = (BasicDBObject) JSON.parse(payload);
                 Document documentToInsert = new Document(parse.toMap());
@@ -94,9 +147,8 @@ public class StoreInMongo extends AbstractMongoProcessor {
 
             } catch (Exception e) {
                 /*
-                 * If any FlowFiles error on translation to a Mongo Object, they
-                 * were not added to the documentsToInsert, so route to failure
-                 * immediately
+                 * If any FlowFiles error on translation to a Mongo Object, they were not added to
+                 * the documentsToInsert, so route to failure immediately
                  */
                 logger.error("Encountered exception while processing FlowFile for Mongo Storage. Routing to failure and continuing.", e);
                 FlowFile failureFlowFile = session.putAttribute(flowFile, "mongo.exception", e.getMessage());
@@ -107,7 +159,6 @@ public class StoreInMongo extends AbstractMongoProcessor {
             // add to the ordered list so we can determine which fail on bulk
             // write
             flowFilesAttemptedInsert.add(flowFile);
-
         }
 
         /*
@@ -124,7 +175,6 @@ public class StoreInMongo extends AbstractMongoProcessor {
             logger.debug("Evaluating FlowFile routing against {} Write Errors for {} FlowFiles", new Object[]{writeErrors.size(), flowFilesAttemptedInsert.size()});
             transferFlowFiles(session, flowFilesAttemptedInsert, writeErrors);
         }
-
     }
 
     protected Map<Integer, BulkWriteError> executeBulkInsert(List<InsertOneModel<Document>> documentsToInsert) {
@@ -202,23 +252,4 @@ public class StoreInMongo extends AbstractMongoProcessor {
         failureAttributes.put("mongo.errormessage", bwe.getMessage());
         return failureAttributes;
     }
-
-    private static class StringStreamCallback implements InputStreamCallback {
-
-        private String text;
-
-        public StringStreamCallback() {
-        }
-
-        @Override
-        public void process(InputStream inputStream) throws IOException {
-            text = IOUtils.toString(inputStream);
-        }
-
-        public String getText() {
-            return text;
-        }
-    }
-
-
 }
