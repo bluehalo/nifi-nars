@@ -80,6 +80,7 @@ public class CreateContent extends AbstractProcessor {
         FlowFile flowFile;
         if (original == null) {
             flowFile = session.create();
+            session.getProvenanceReporter().create(flowFile);
         } else {
             flowFile = session.clone(original);
             session.transfer(original, REL_ORIGINAL);
@@ -89,6 +90,7 @@ public class CreateContent extends AbstractProcessor {
         this.getLogger().debug("Created content: {}", new Object[]{updatedContent});
 
         flowFile = session.write(flowFile, outputStream -> outputStream.write(updatedContent.getBytes(StandardCharsets.UTF_8)));
+        session.getProvenanceReporter().modifyContent(flowFile);
         session.transfer(flowFile, REL_SUCCESS);
     }
 

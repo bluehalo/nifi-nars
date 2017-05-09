@@ -93,6 +93,7 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
             if (latestStats.isPresent()) {
                 flowFile = session.putAllAttributes(flowFile, latestStats.get());
+                session.getProvenanceReporter().modifyAttributes(flowFile);
             }
             outgoing.add(flowFile);
         }
@@ -114,6 +115,7 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
             if (latestStats.isPresent()) {
                 FlowFile statsFlowFile = session.create();
                 statsFlowFile = session.putAllAttributes(statsFlowFile, latestStats.get());
+                session.getProvenanceReporter().create(statsFlowFile);
                 session.transfer(statsFlowFile, REL_STATS);
             }
 

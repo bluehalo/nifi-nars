@@ -88,6 +88,7 @@ public class InspectZipContents extends AbstractProcessor {
                     name = zipEntry.getName();
                 }
                 flowFile = session.putAttribute(flowFile, ATTR, name);
+                session.getProvenanceReporter().modifyAttributes(flowFile);
                 session.transfer(flowFile, REL_SUCCESS);
             }
 

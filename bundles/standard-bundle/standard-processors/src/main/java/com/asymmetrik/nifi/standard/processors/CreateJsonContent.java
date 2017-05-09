@@ -144,6 +144,7 @@ public class CreateJsonContent extends AbstractProcessor {
             }
         }
         flowFile = session.write(flowFile, outputStream -> outputStream.write(json.toString().getBytes(StandardCharsets.UTF_8)));
+        session.getProvenanceReporter().modifyContent(flowFile);
         session.transfer(flowFile, REL_SUCCESS);
     }
 

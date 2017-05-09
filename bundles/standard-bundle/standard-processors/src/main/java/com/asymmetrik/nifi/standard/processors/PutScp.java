@@ -157,6 +157,7 @@ public class PutScp extends AbstractScpProcessor {
                 });
 
                 processSession.transfer(flowFile, REL_SUCCESS);
+                processSession.getProvenanceReporter().send(flowFile, remotePath);
                 fileIt.remove();
                 if (logger.isDebugEnabled()) {
                     logger.debug("Sent {} to remote host", new Object[]{flowFile});
