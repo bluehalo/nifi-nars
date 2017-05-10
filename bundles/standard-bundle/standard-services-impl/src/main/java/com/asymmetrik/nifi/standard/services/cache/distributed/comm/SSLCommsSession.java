@@ -43,7 +43,7 @@ public class SSLCommsSession implements CommsSession {
     private final BufferedOutputStream bufferedOut;
 
     public SSLCommsSession(final SSLContext sslContext, final String hostname, final int port) throws IOException {
-        sslSocketChannel = new SSLSocketChannel(sslContext, hostname, port, true);
+        sslSocketChannel = new SSLSocketChannel(sslContext, hostname, port, null, true);
 
         bufferedIn = new BufferedInputStream(new SSLSocketChannelInputStream(sslSocketChannel));
         bufferedOut = new BufferedOutputStream(new SSLSocketChannelOutputStream(sslSocketChannel));
