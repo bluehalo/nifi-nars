@@ -1,3 +1,4 @@
+com.asymmetrik.nifi.standard.processors.AttributeTumblingWindow
 com.asymmetrik.nifi.standard.processors.AutoTerminator
 com.asymmetrik.nifi.standard.processors.CreateContent
 com.asymmetrik.nifi.standard.processors.CreateJsonContent
