@@ -41,3 +41,15 @@ Then start NiFi as you normally would:
 ```
 $ ./bin/nifi.sh start
 ```
+
+## Releasing
+
+To tag and release:
+
+```
+$ mvn release:prepare -Prpm
+$ mvn release:perform -Prpm
+```
+
+You must have access to deploy to the repository in the distributionManagement section of the pom.xml.
+
