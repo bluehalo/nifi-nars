@@ -67,9 +67,9 @@ public class AttributeTumblingWindow extends AbstractProcessor {
         .description("Flowfiles arriving after specified time window will get routed here")
         .name("elapsed")
         .build();
-    static final Relationship NON_ELAPSED = new Relationship.Builder()
-        .description("Flowfiles arriving before specified time window will get routed here")
-        .name("non-elapsed")
+    static final Relationship SUCCESS = new Relationship.Builder()
+        .description("ALL successfully processed flowFiles arrive here which includes all ELAPSED flowfiles")
+        .name("success")
         .build();
     static final Relationship FAILURE = new Relationship.Builder()
         .name("failure")
@@ -99,13 +99,14 @@ public class AttributeTumblingWindow extends AbstractProcessor {
             if (stopWatch.elapsed()) {
                 Map<String, String> aggregate = incrementAndSet(context.getStateManager(), value, true);
                 flowFile = session.putAllAttributes(flowFile, aggregate);
-                session.transfer(flowFile, ELAPSED);
 
+                session.transfer(session.clone(flowFile), SUCCESS);
+                session.transfer(flowFile, ELAPSED);
                 stopWatch.restart();
             } else {
                 Map<String, String> aggregate = incrementAndSet(context.getStateManager(), value, false);
                 flowFile = session.putAllAttributes(flowFile, aggregate);
-                session.transfer(flowFile, NON_ELAPSED);
+                session.transfer(flowFile, SUCCESS);
             }
         } catch (Exception e) {
             getLogger().error(e.getMessage(), e);
@@ -147,7 +148,7 @@ public class AttributeTumblingWindow extends AbstractProcessor {
 
     @Override
     public Set<Relationship> getRelationships() {
-        return ImmutableSet.of(ELAPSED, NON_ELAPSED, FAILURE);
+        return ImmutableSet.of(ELAPSED, SUCCESS, FAILURE);
     }
 
     private static class CheckedStopWatch {
