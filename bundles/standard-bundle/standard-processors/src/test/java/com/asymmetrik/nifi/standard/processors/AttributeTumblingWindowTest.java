@@ -42,7 +42,7 @@ public class AttributeTumblingWindowTest {
         runner.run(5);
 
         runner.assertTransferCount(ELAPSED, 0);
-        runner.assertTransferCount(NON_ELAPSED, 5);
+        runner.assertTransferCount(SUCCESS, 5);
         runner.assertTransferCount(FAILURE, 0);
     }
 
@@ -68,7 +68,7 @@ public class AttributeTumblingWindowTest {
 
         List<MockFlowFile> elapsed = runner.getFlowFilesForRelationship(ELAPSED);
         assertEquals(1, elapsed.size());
-        runner.assertTransferCount(NON_ELAPSED, 5);
+        runner.assertTransferCount(SUCCESS, 6);
         runner.assertTransferCount(FAILURE, 0);
 
         assertEquals("10.0", elapsed.get(0).getAttribute(TUMBLING_WINDOW_SUM_KEY));
@@ -100,7 +100,7 @@ public class AttributeTumblingWindowTest {
 
         List<MockFlowFile> elapsed = runner.getFlowFilesForRelationship(ELAPSED);
         assertEquals(2, elapsed.size());
-        runner.assertTransferCount(NON_ELAPSED, 4);
+        runner.assertTransferCount(SUCCESS, 6);
         runner.assertTransferCount(FAILURE, 0);
 
         assertEquals("2.0", elapsed.get(0).getAttribute(TUMBLING_WINDOW_SUM_KEY));
@@ -120,13 +120,13 @@ public class AttributeTumblingWindowTest {
         // this should should still trigger timer elapsed so we'll get a ELAPSED flowfile
         runner.enqueue(new byte[]{}, attributes);
 
-        runner.run(1, false);           // NON_ELAPSED
+        runner.run(1, false);           // SUCCESS
         Thread.sleep(2000);
         runner.run(1, false, false);    // FAILURE
         runner.run(1, false, false);    // ELAPSED
 
         runner.assertTransferCount(ELAPSED, 1);
-        runner.assertTransferCount(NON_ELAPSED, 1);
+        runner.assertTransferCount(SUCCESS, 2);
         runner.assertTransferCount(FAILURE, 1);
     }
 }
