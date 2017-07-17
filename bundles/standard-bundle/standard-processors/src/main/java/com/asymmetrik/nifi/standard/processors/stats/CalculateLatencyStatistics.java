@@ -3,6 +3,7 @@ package com.asymmetrik.nifi.standard.processors.stats;
 import java.util.Map;
 import java.util.Optional;
 
+import com.asymmetrik.nifi.standard.processors.util.MomentAggregator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -48,9 +49,10 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
 
     private volatile String keyName;
 
+
     @Override
     protected void init(ProcessorInitializationContext context) {
-        properties = ImmutableList.of(ATTR_NAME, REPORTING_INTERVAL, BATCH_SIZE);
+        properties = ImmutableList.of(ATTR_NAME, CORRELATION_ATTR, REPORTING_INTERVAL, BATCH_SIZE);
     }
 
     @OnScheduled
@@ -61,44 +63,45 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
     }
 
     @Override
-    protected void updateStats(FlowFile flowFile, long currentTimestamp) {
-        // Extract timestamp from original flowfile
-        String timeString = flowFile.getAttribute(keyName);
+    protected void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp) {
 
-        // calculate latency and add to aggregator
+        // Extract timestamp from original flowfile
+        long eventTime = Long.parseLong(flowFile.getAttribute(keyName));
+
         try {
-            Long latency = currentTimestamp - Long.parseLong(timeString);
+            // calculate latency and add to aggregator
+            Long latency = currentTimestamp - eventTime;
             aggregator.addValue(latency.doubleValue() / 1000.0);
         } catch (NumberFormatException nfe) {
-            getLogger().warn("Unable to convert {} to a long", new Object[]{timeString}, nfe);
+            getLogger().warn("Unable to convert {} to a long", new Object[]{eventTime}, nfe);
         }
     }
 
     @Override
     protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp) {
         // emit stats only if there is data
-        if (aggregator.getN() > 0) {
-            int n = aggregator.getN();
-            double sum = aggregator.getSum();
-            double min = aggregator.getMin();
-            double max = aggregator.getMax();
-            double mean = aggregator.getMean();
-            double stdev = aggregator.getStandardDeviation();
-
-            Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
-                    .put("latency_reporter.count", Integer.toString(n))
-                    .put("latency_reporter.sum", Double.toString(sum))
-                    .put("latency_reporter.min", Double.toString(min))
-                    .put("latency_reporter.max", Double.toString(max))
-                    .put("latency_reporter.avg", Double.toString(mean))
-                    .put("latency_reporter.stdev", Double.toString(stdev))
-                    .put("latency_reporter.timestamp", Long.toString(currentTimestamp))
-                    .put("latency_reporter.units", "Seconds")
-                    .build();
-            return Optional.of(attributes);
-
-        } else {
+        // if (aggregator.getN() > 0) {
+        //     int n = aggregator.getN();
+        //     double sum = aggregator.getSum();
+        //     double min = aggregator.getMin();
+        //     double max = aggregator.getMax();
+        //     double mean = aggregator.getMean();
+        //     double stdev = aggregator.getStandardDeviation();
+        //
+        //     Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
+        //             .put("latency_reporter.count", Integer.toString(n))
+        //             .put("latency_reporter.sum", Double.toString(sum))
+        //             .put("latency_reporter.min", Double.toString(min))
+        //             .put("latency_reporter.max", Double.toString(max))
+        //             .put("latency_reporter.avg", Double.toString(mean))
+        //             .put("latency_reporter.stdev", Double.toString(stdev))
+        //             .put("latency_reporter.timestamp", Long.toString(currentTimestamp))
+        //             .put("latency_reporter.units", "Seconds")
+        //             .build();
+        //     return Optional.of(attributes);
+        //
+        // } else {
             return Optional.empty();
-        }
+        // }
     }
 }

@@ -1,10 +1,12 @@
 package com.asymmetrik.nifi.standard.processors.stats;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.asymmetrik.nifi.standard.processors.util.MomentAggregator;
@@ -21,6 +23,7 @@ import org.apache.nifi.processor.util.StandardValidators;
 
 public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
+    private static final String DEFAULT_MOMENT_AGGREGATOR_KEY = "com.asymmetrik.nifi.standard.processors.stats.AbstractStatsProcessor";
     /**
      * Relationship Descriptors
      */
@@ -43,6 +46,15 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
     /**
      * Property Descriptors
      */
+    static final PropertyDescriptor CORRELATION_ATTR = new PropertyDescriptor.Builder()
+            .name("correlation_attr")
+            .displayName("Correlation Attribute")
+            .description("The attribute used to correlate events. If this property is set, event with " +
+                    "the same value of the correlation attribute will be grouped prior to computing statistics.")
+            .required(false)
+            .expressionLanguageSupported(false)
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+            .build();
     static final PropertyDescriptor REPORTING_INTERVAL = new PropertyDescriptor.Builder()
             .name("Reporting Interval")
             .description("Indicates how often this processor should report statistics.")
@@ -53,12 +65,14 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
     private final Set<Relationship> relationships = ImmutableSet.of(REL_ORIGINAL, REL_STATS);
     protected List<PropertyDescriptor> properties;
-    protected volatile long reportingIntervalMillis;
-    protected volatile long lastReportTime = 0L;
-    protected volatile MomentAggregator aggregator = new MomentAggregator();
+    private volatile long reportingIntervalMillis;
+    private volatile long lastReportTime = 0L;
+    // protected volatile MomentAggregator aggregator = new MomentAggregator();
+    private ConcurrentHashMap<String, MomentAggregator> momentsMap;
 
-    protected Optional<Map<String, String>> latestStats = Optional.empty();
-    protected int batchSize = 1;
+    private Optional<Map<String, String>> latestStats = Optional.empty();
+    private int batchSize = 1;
+    private String correlationAttr;
 
     @Override
     protected final List<PropertyDescriptor> getSupportedPropertyDescriptors() {
@@ -72,9 +86,10 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
     @OnScheduled
     public void onScheduled(final ProcessContext context) {
-        reportingIntervalMillis = context.getProperty(REPORTING_INTERVAL).asTimePeriod(TimeUnit.MILLISECONDS);
-        aggregator.reset();
         batchSize = context.getProperty(BATCH_SIZE).asInteger();
+        reportingIntervalMillis = context.getProperty(REPORTING_INTERVAL).asTimePeriod(TimeUnit.MILLISECONDS);
+        momentsMap = new ConcurrentHashMap<>();
+        correlationAttr = context.getProperty(CORRELATION_ATTR).getValue();
     }
 
     @Override
@@ -88,8 +103,12 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
         List<FlowFile> outgoing = new ArrayList<>();
 
+        Map<String, String> attributes = new HashMap<>();
         for (FlowFile flowFile : incoming) {
-            updateStats(flowFile, currentTimestamp);
+            attributes = flowFile.getAttributes();
+
+            String key = (null == correlationAttr) ? DEFAULT_MOMENT_AGGREGATOR_KEY : correlationAttr;
+            updateStats(flowFile, momentsMap.getOrDefault(key, new MomentAggregator()), currentTimestamp);
 
             if (latestStats.isPresent()) {
                 flowFile = session.putAllAttributes(flowFile, latestStats.get());
@@ -102,29 +121,31 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
             session.transfer(outgoing, REL_ORIGINAL);
         }
 
-        sendStatsIfPresent(session, currentTimestamp);
+        sendStatsIfPresent(session, attributes, currentTimestamp);
     }
 
     /**
      * Send a flowfile with the stats as attributes: IF the report time is exceeded AND there are
      * stats to send
      */
-    protected void sendStatsIfPresent(ProcessSession session, long currentTimestamp) {
+    private void sendStatsIfPresent(ProcessSession session, Map<String, String> attributes, long currentTimestamp) {
         if (currentTimestamp >= lastReportTime + reportingIntervalMillis) {
             latestStats = buildStatAttributes(currentTimestamp);
             if (latestStats.isPresent()) {
+                attributes.putAll(latestStats.get());
+
                 FlowFile statsFlowFile = session.create();
-                statsFlowFile = session.putAllAttributes(statsFlowFile, latestStats.get());
+                statsFlowFile = session.putAllAttributes(statsFlowFile, attributes);
                 session.getProvenanceReporter().create(statsFlowFile);
                 session.transfer(statsFlowFile, REL_STATS);
             }
 
             lastReportTime = currentTimestamp;
-            aggregator.reset();
+            momentsMap.values().forEach(MomentAggregator::reset);
         }
     }
 
-    protected abstract void updateStats(FlowFile flowFile, long currentTimestamp);
+    protected abstract void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp);
 
     /**
      * Build stat attributes if the aggregator contains data. Note that CloudWatch does not accept
