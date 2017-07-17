@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.asymmetrik.nifi.standard.processors.util.MomentAggregator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -68,7 +67,7 @@ public class CalculateVolumeStatistics extends AbstractStatsProcessor {
     }
 
     @Override
-    protected void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp) {
+    protected void updateStats(FlowFile flowFile, long currentTimestamp) {
         count.incrementAndGet();
 
         // Add the number of flowfiles seen if the window time is exceeded, then reset the counter
@@ -81,28 +80,28 @@ public class CalculateVolumeStatistics extends AbstractStatsProcessor {
     @Override
     protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp) {
         // emit stats only if there is data
-        // if (aggregator.getN() > 0) {
-        //     Double bucket = (double) bucketIntervalMillis;
-        //     Double min = 1000.0 * aggregator.getMin() / bucket;
-        //     Double max = 1000.0 * aggregator.getMax() / bucket;
-        //     Double avg = 1000.0 * aggregator.getMean() / bucket;
-        //     Double stdev = 1000.0 * aggregator.getStandardDeviation() / bucket;
-        //
-        //     Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
-        //             .put("volume_statistics.count", Integer.toString(aggregator.getN()))
-        //             .put("volume_statistics.sum", Integer.toString((int) aggregator.getSum()))
-        //             .put("volume_statistics.min", Integer.toString(min.intValue()))
-        //             .put("volume_statistics.max", Integer.toString(max.intValue()))
-        //             .put("volume_statistics.avg", Integer.toString(avg.intValue()))
-        //             .put("volume_statistics.stdev", stdev.toString())
-        //             .put("volume_statistics.timestamp", Long.toString(currentTimestamp))
-        //             .put("volume_statistics.units", "Count/Second")
-        //             .build();
-        //
-        //     return Optional.of(attributes);
-        //
-        // } else {
+        if (aggregator.getN() > 0) {
+            Double bucket = (double) bucketIntervalMillis;
+            Double min = 1000.0 * aggregator.getMin() / bucket;
+            Double max = 1000.0 * aggregator.getMax() / bucket;
+            Double avg = 1000.0 * aggregator.getMean() / bucket;
+            Double stdev = 1000.0 * aggregator.getStandardDeviation() / bucket;
+
+            Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
+                    .put("volume_statistics.count", Integer.toString(aggregator.getN()))
+                    .put("volume_statistics.sum", Integer.toString((int) aggregator.getSum()))
+                    .put("volume_statistics.min", Integer.toString(min.intValue()))
+                    .put("volume_statistics.max", Integer.toString(max.intValue()))
+                    .put("volume_statistics.avg", Integer.toString(avg.intValue()))
+                    .put("volume_statistics.stdev", stdev.toString())
+                    .put("volume_statistics.timestamp", Long.toString(currentTimestamp))
+                    .put("volume_statistics.units", "Count/Second")
+                    .build();
+
+            return Optional.of(attributes);
+
+        } else {
             return Optional.empty();
-        // }
+        }
     }
 }
