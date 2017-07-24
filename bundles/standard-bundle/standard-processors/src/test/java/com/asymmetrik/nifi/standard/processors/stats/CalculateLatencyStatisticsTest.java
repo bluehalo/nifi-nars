@@ -29,7 +29,7 @@ public class CalculateLatencyStatisticsTest {
         runner = TestRunners.newTestRunner(CalculateLatencyStatistics.class);
         runner.setProperty(CalculateLatencyStatistics.ATTR_NAME, attribute);
         runner.setProperty(AbstractStatsProcessor.REPORTING_INTERVAL, "1 s");
-        runner.setProperty(AbstractStatsProcessor.BATCH_SIZE, "20");
+        runner.setProperty(AbstractStatsProcessor.BATCH_SIZE, "100");
         runner.assertValid();
     }
 
@@ -90,13 +90,13 @@ public class CalculateLatencyStatisticsTest {
         runner.run();
 
         // sleep for the remainder of the reporting interval
-        Thread.sleep(1100);
+        Thread.sleep(1000);
 
         // send 20 files through
         for (int i = 0; i < 20; i++) {
             runner.enqueue(data, attributes);
+            runner.run();
         }
-        runner.run();
 
         // all 20 originals emitted, 1 stats file
         runner.assertTransferCount(AbstractStatsProcessor.REL_ORIGINAL, 20);

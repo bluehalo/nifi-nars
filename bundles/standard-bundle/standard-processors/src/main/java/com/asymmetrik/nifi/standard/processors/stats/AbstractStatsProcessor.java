@@ -1,12 +1,10 @@
 package com.asymmetrik.nifi.standard.processors.stats;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.asymmetrik.nifi.standard.processors.util.MomentAggregator;
@@ -48,15 +46,6 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
     /**
      * Property Descriptors
      */
-    static final PropertyDescriptor CORRELATION_ATTR = new PropertyDescriptor.Builder()
-            .name("correlation_attr")
-            .displayName("Correlation Attribute")
-            .description("The attribute used to correlate events. If this property is set, event with " +
-                    "the same value of the correlation attribute will be grouped prior to computing statistics.")
-            .required(false)
-            .expressionLanguageSupported(false)
-            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
-            .build();
     static final PropertyDescriptor REPORTING_INTERVAL = new PropertyDescriptor.Builder()
             .name("Reporting Interval")
             .description("Indicates how often this processor should report statistics.")
@@ -88,7 +77,6 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
     @OnScheduled
     public void onScheduled(final ProcessContext context) {
-        batchSize = context.getProperty(BATCH_SIZE).asInteger();
         reportingIntervalMillis = context.getProperty(REPORTING_INTERVAL).asTimePeriod(TimeUnit.MILLISECONDS);
         PropertyValue correlationAttrProp = context.getProperty(CORRELATION_ATTR);
         correlationKey = correlationAttrProp.isSet() ? correlationAttrProp.getValue() : DEFAULT_MOMENT_AGGREGATOR_KEY;
@@ -108,7 +96,6 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
         List<FlowFile> outgoing = new ArrayList<>();
 
-        Map<String, String> attributes = new HashMap<>();
         for (FlowFile flowFile : incoming) {
             attributes = flowFile.getAttributes();
             String key = StringUtils.isEmpty(correlationKey) ? DEFAULT_MOMENT_AGGREGATOR_KEY : correlationKey;
@@ -159,7 +146,7 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
                 attributes.putAll(attrs);
 
                 FlowFile statsFlowFile = session.create();
-                statsFlowFile = session.putAllAttributes(statsFlowFile, attributes);
+                statsFlowFile = session.putAllAttributes(statsFlowFile, latestStats.get());
                 session.getProvenanceReporter().create(statsFlowFile);
                 session.transfer(statsFlowFile, REL_STATS);
             }
@@ -168,7 +155,7 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
         momentsMap.values().forEach(MomentAggregator::reset);
     }
 
-    protected abstract void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp);
+    protected abstract void updateStats(FlowFile flowFile, long currentTimestamp);
 
     /**
      * Build stat attributes if the aggregator contains data. Note that CloudWatch does not accept
