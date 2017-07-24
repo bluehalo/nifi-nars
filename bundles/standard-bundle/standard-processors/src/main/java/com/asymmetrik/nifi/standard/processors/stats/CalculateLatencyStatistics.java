@@ -3,6 +3,7 @@ package com.asymmetrik.nifi.standard.processors.stats;
 import java.util.Map;
 import java.util.Optional;
 
+import com.asymmetrik.nifi.standard.processors.util.MomentAggregator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -40,6 +41,7 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
      * Property Descriptors
      */
     static final PropertyDescriptor ATTR_NAME = new PropertyDescriptor.Builder()
+            .displayName("Timestamp Attribute")
             .name("timestamp attribute")
             .description("The attribute name holding the timestamp value. This attribute is assumed to be a Java long that represents the milliseconds after epoch.")
             .required(true)
@@ -48,9 +50,10 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
 
     private volatile String keyName;
 
+
     @Override
     protected void init(ProcessorInitializationContext context) {
-        properties = ImmutableList.of(ATTR_NAME, REPORTING_INTERVAL, BATCH_SIZE);
+        properties = ImmutableList.of(ATTR_NAME, CORRELATION_ATTR, REPORTING_INTERVAL, BATCH_SIZE);
     }
 
     @OnScheduled
@@ -61,21 +64,23 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
     }
 
     @Override
-    protected void updateStats(FlowFile flowFile, long currentTimestamp) {
-        // Extract timestamp from original flowfile
-        String timeString = flowFile.getAttribute(keyName);
+    protected void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp) {
 
-        // calculate latency and add to aggregator
+        String eventTimeAttribute = flowFile.getAttribute(keyName);
         try {
-            Long latency = currentTimestamp - Long.parseLong(timeString);
+            // Extract timestamp from original flowfile
+            long eventTime = Long.parseLong(eventTimeAttribute);
+
+            // calculate latency and add to aggregator
+            Long latency = currentTimestamp - eventTime;
             aggregator.addValue(latency.doubleValue() / 1000.0);
         } catch (NumberFormatException nfe) {
-            getLogger().warn("Unable to convert {} to a long", new Object[]{timeString}, nfe);
+            getLogger().warn("Unable to convert {} to a long", new Object[]{eventTimeAttribute}, nfe);
         }
     }
 
     @Override
-    protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp) {
+    protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp, MomentAggregator aggregator) {
         // emit stats only if there is data
         if (aggregator.getN() > 0) {
             int n = aggregator.getN();

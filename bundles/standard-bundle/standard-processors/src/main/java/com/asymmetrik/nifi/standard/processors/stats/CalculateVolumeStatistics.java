@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.asymmetrik.nifi.standard.processors.util.MomentAggregator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -67,7 +68,7 @@ public class CalculateVolumeStatistics extends AbstractStatsProcessor {
     }
 
     @Override
-    protected void updateStats(FlowFile flowFile, long currentTimestamp) {
+    protected void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp) {
         count.incrementAndGet();
 
         // Add the number of flowfiles seen if the window time is exceeded, then reset the counter
@@ -78,7 +79,7 @@ public class CalculateVolumeStatistics extends AbstractStatsProcessor {
     }
 
     @Override
-    protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp) {
+    protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp, MomentAggregator aggregator) {
         // emit stats only if there is data
         if (aggregator.getN() > 0) {
             Double bucket = (double) bucketIntervalMillis;
