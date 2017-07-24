@@ -25,7 +25,7 @@ import org.apache.nifi.processor.util.StandardValidators;
 
 public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
-    private static final String DEFAULT_MOMENT_AGGREGATOR_KEY = "com.asymmetrik.nifi.standard.processors.stats.AbstractStatsProcessor";
+    static final String DEFAULT_MOMENT_AGGREGATOR_KEY = "";
     /**
      * Relationship Descriptors
      */
@@ -74,7 +74,7 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
     private Map<String, Optional<Map<String, String>>> latestStats;
     private int batchSize = 1;
-    private String correlationAttr;
+    private String correlationKey;
 
     @Override
     protected final List<PropertyDescriptor> getSupportedPropertyDescriptors() {
@@ -91,7 +91,7 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
         batchSize = context.getProperty(BATCH_SIZE).asInteger();
         reportingIntervalMillis = context.getProperty(REPORTING_INTERVAL).asTimePeriod(TimeUnit.MILLISECONDS);
         PropertyValue correlationAttrProp = context.getProperty(CORRELATION_ATTR);
-        correlationAttr = correlationAttrProp.isSet() ? correlationAttrProp.getValue() : DEFAULT_MOMENT_AGGREGATOR_KEY;
+        correlationKey = correlationAttrProp.isSet() ? correlationAttrProp.getValue() : DEFAULT_MOMENT_AGGREGATOR_KEY;
 
         momentsMap = new ConcurrentHashMap<>();
         latestStats = new ConcurrentHashMap<>();
@@ -111,20 +111,19 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
         Map<String, String> attributes = new HashMap<>();
         for (FlowFile flowFile : incoming) {
             attributes = flowFile.getAttributes();
-
-            String key = StringUtils.isEmpty(correlationAttr) ? DEFAULT_MOMENT_AGGREGATOR_KEY : correlationAttr;
-
-            MomentAggregator aggregator = momentsMap.get(key);
+            String key = StringUtils.isEmpty(correlationKey) ? DEFAULT_MOMENT_AGGREGATOR_KEY : correlationKey;
+            String correlationAttr = attributes.getOrDefault(key, DEFAULT_MOMENT_AGGREGATOR_KEY);
+            MomentAggregator aggregator = momentsMap.get(correlationAttr);
             if (null == aggregator) {
                 aggregator = new MomentAggregator();
-                momentsMap.put(key, aggregator);
+                momentsMap.put(correlationAttr, aggregator);
             }
             updateStats(flowFile, aggregator, currentTimestamp);
 
-            Optional<Map<String, String>> stats = latestStats.get(key);
+            Optional<Map<String, String>> stats = latestStats.get(correlationAttr);
             if (null == stats) {
                 stats = Optional.of(new ConcurrentHashMap<>());
-                latestStats.put(key, stats);
+                latestStats.put(correlationAttr, stats);
             }
 
             if (stats.isPresent()) {
@@ -151,19 +150,22 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
         }
 
         for (Map.Entry<String, Optional<Map<String, String>>> statsMap : latestStats.entrySet()) {
-            Optional<Map<String, String>> result = buildStatAttributes(currentTimestamp, momentsMap.get(statsMap.getKey()));
+
+            String statsMapKey = statsMap.getKey();
+            Optional<Map<String, String>> result = buildStatAttributes(currentTimestamp, momentsMap.get(statsMapKey));
             if (result.isPresent()) {
-                attributes.putAll(result.get());
+                Map<String, String> attrs = new HashMap<>(result.get());
+                attrs.put("AbstractStatsProcessor.correlationKey", statsMapKey);
+                attributes.putAll(attrs);
 
                 FlowFile statsFlowFile = session.create();
                 statsFlowFile = session.putAllAttributes(statsFlowFile, attributes);
                 session.getProvenanceReporter().create(statsFlowFile);
                 session.transfer(statsFlowFile, REL_STATS);
             }
-
-            lastReportTime = currentTimestamp;
-            momentsMap.values().forEach(MomentAggregator::reset);
         }
+        lastReportTime = currentTimestamp;
+        momentsMap.values().forEach(MomentAggregator::reset);
     }
 
     protected abstract void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp);

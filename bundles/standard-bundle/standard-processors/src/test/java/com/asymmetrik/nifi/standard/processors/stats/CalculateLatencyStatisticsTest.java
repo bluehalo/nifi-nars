@@ -1,5 +1,6 @@
 package com.asymmetrik.nifi.standard.processors.stats;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
@@ -10,6 +11,7 @@ import org.apache.nifi.util.TestRunners;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.asymmetrik.nifi.standard.processors.stats.AbstractStatsProcessor.DEFAULT_MOMENT_AGGREGATOR_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -135,6 +137,78 @@ public class CalculateLatencyStatisticsTest {
             f.assertContentEquals(data);
             assertStatAttributesNotPresent(f);
         }
+    }
+
+    @Test
+    public void testSingleCorrelationAttribute() {
+        runner.setProperty(CalculateLatencyStatistics.CORRELATION_ATTR, "flowId");
+        runner.assertValid();
+        Map<String, String> attrs = new HashMap<>(attributes);
+        for (int i = 0; i < 20; i++) {
+            attrs.put("flowId", "conway");
+            runner.enqueue(data, attrs);
+        }
+        runner.run();
+        runner.assertTransferCount(AbstractStatsProcessor.REL_STATS, 1);
+        MockFlowFile flowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(0);
+        assertStatAttributesPresent(flowFile);
+        assertEquals("conway", flowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
+    }
+
+    @Test
+    public void testTwoCorrelationAttributeValues() {
+        runner.setProperty(CalculateLatencyStatistics.CORRELATION_ATTR, "flowId");
+        runner.assertValid();
+
+        Map<String, String> attrs = new HashMap<>(attributes);
+        for (int i = 0; i < 10; i++) {
+            attrs.put("flowId", "conway");
+            runner.enqueue(data, attrs);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            attrs.put("flowId", "victor");
+            runner.enqueue(data, attrs);
+        }
+        runner.run();
+        runner.assertTransferCount(AbstractStatsProcessor.REL_STATS, 2);
+
+        MockFlowFile conwayFlowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(0);
+        assertStatAttributesPresent(conwayFlowFile);
+        assertEquals(10, Integer.parseInt(conwayFlowFile.getAttribute("latency_reporter.count")));
+        assertEquals("conway", conwayFlowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
+
+        MockFlowFile foobarFlowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(1);
+        assertStatAttributesPresent(foobarFlowFile);
+        assertEquals(5, Integer.parseInt(foobarFlowFile.getAttribute("latency_reporter.count")));
+        assertEquals("victor", foobarFlowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
+    }
+
+    @Test
+    public void testSomeFlowfilesMissingCorrelationAttributeValues() {
+        runner.setProperty(CalculateLatencyStatistics.CORRELATION_ATTR, "flowId");
+        runner.assertValid();
+
+        Map<String, String> attrs = new HashMap<>(attributes);
+        for (int i = 0; i < 10; i++) {
+            attrs.put("flowId", "foobar");
+            runner.enqueue(data, attrs);
+        }
+        for (int i = 0; i < 10; i++) {
+            runner.enqueue(data, attributes);
+        }
+        runner.run();
+        runner.assertTransferCount(AbstractStatsProcessor.REL_STATS, 2);
+
+        MockFlowFile foobarFlowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(0);
+        assertStatAttributesPresent(foobarFlowFile);
+        assertEquals(10, Integer.parseInt(foobarFlowFile.getAttribute("latency_reporter.count")));
+        assertEquals(DEFAULT_MOMENT_AGGREGATOR_KEY, foobarFlowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
+
+        MockFlowFile flowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(1);
+        assertStatAttributesPresent(flowFile);
+        assertEquals(10, Integer.parseInt(flowFile.getAttribute("latency_reporter.count")));
+        assertEquals("foobar", flowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
     }
 
     private void assertStatAttributesPresent(MockFlowFile f) {

@@ -41,6 +41,7 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
      * Property Descriptors
      */
     static final PropertyDescriptor ATTR_NAME = new PropertyDescriptor.Builder()
+            .displayName("Timestamp Attribute")
             .name("timestamp attribute")
             .description("The attribute name holding the timestamp value. This attribute is assumed to be a Java long that represents the milliseconds after epoch.")
             .required(true)
