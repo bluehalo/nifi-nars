@@ -65,43 +65,44 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
     @Override
     protected void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp) {
 
-        // Extract timestamp from original flowfile
-        long eventTime = Long.parseLong(flowFile.getAttribute(keyName));
-
+        String eventTimeAttribute = flowFile.getAttribute(keyName);
         try {
+            // Extract timestamp from original flowfile
+            long eventTime = Long.parseLong(eventTimeAttribute);
+
             // calculate latency and add to aggregator
             Long latency = currentTimestamp - eventTime;
             aggregator.addValue(latency.doubleValue() / 1000.0);
         } catch (NumberFormatException nfe) {
-            getLogger().warn("Unable to convert {} to a long", new Object[]{eventTime}, nfe);
+            getLogger().warn("Unable to convert {} to a long", new Object[]{eventTimeAttribute}, nfe);
         }
     }
 
     @Override
-    protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp) {
+    protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp, MomentAggregator aggregator) {
         // emit stats only if there is data
-        // if (aggregator.getN() > 0) {
-        //     int n = aggregator.getN();
-        //     double sum = aggregator.getSum();
-        //     double min = aggregator.getMin();
-        //     double max = aggregator.getMax();
-        //     double mean = aggregator.getMean();
-        //     double stdev = aggregator.getStandardDeviation();
-        //
-        //     Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
-        //             .put("latency_reporter.count", Integer.toString(n))
-        //             .put("latency_reporter.sum", Double.toString(sum))
-        //             .put("latency_reporter.min", Double.toString(min))
-        //             .put("latency_reporter.max", Double.toString(max))
-        //             .put("latency_reporter.avg", Double.toString(mean))
-        //             .put("latency_reporter.stdev", Double.toString(stdev))
-        //             .put("latency_reporter.timestamp", Long.toString(currentTimestamp))
-        //             .put("latency_reporter.units", "Seconds")
-        //             .build();
-        //     return Optional.of(attributes);
-        //
-        // } else {
+        if (aggregator.getN() > 0) {
+            int n = aggregator.getN();
+            double sum = aggregator.getSum();
+            double min = aggregator.getMin();
+            double max = aggregator.getMax();
+            double mean = aggregator.getMean();
+            double stdev = aggregator.getStandardDeviation();
+
+            Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
+                    .put("latency_reporter.count", Integer.toString(n))
+                    .put("latency_reporter.sum", Double.toString(sum))
+                    .put("latency_reporter.min", Double.toString(min))
+                    .put("latency_reporter.max", Double.toString(max))
+                    .put("latency_reporter.avg", Double.toString(mean))
+                    .put("latency_reporter.stdev", Double.toString(stdev))
+                    .put("latency_reporter.timestamp", Long.toString(currentTimestamp))
+                    .put("latency_reporter.units", "Seconds")
+                    .build();
+            return Optional.of(attributes);
+
+        } else {
             return Optional.empty();
-        // }
+        }
     }
 }

@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.asymmetrik.nifi.standard.processors.util.MomentAggregator;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.SupportsBatching;
@@ -79,7 +78,7 @@ public class CalculateVolumeStatistics extends AbstractStatsProcessor {
     }
 
     @Override
-    protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp) {
+    protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp, MomentAggregator aggregator) {
         // emit stats only if there is data
         // if (aggregator.getN() > 0) {
         //     Double bucket = (double) bucketIntervalMillis;
