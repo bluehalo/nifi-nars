@@ -212,13 +212,13 @@ public class CalculateLatencyStatisticsTest {
     }
 
     private void assertStatAttributesPresent(MockFlowFile f) {
-        assertNotNull(Integer.parseInt(f.getAttribute("latency_reporter.count")));
-        assertNotNull(Double.parseDouble(f.getAttribute("latency_reporter.sum")));
-        assertNotNull(Double.parseDouble(f.getAttribute("latency_reporter.min")));
-        assertNotNull(Double.parseDouble(f.getAttribute("latency_reporter.max")));
-        assertNotNull(Double.parseDouble(f.getAttribute("latency_reporter.avg")));
-        assertNotNull(Double.parseDouble(f.getAttribute("latency_reporter.stdev")));
-        assertNotNull(Long.parseLong(f.getAttribute("latency_reporter.timestamp")));
+        assertNotNull(f.getAttribute("latency_reporter.count"));
+        assertNotNull(f.getAttribute("latency_reporter.sum"));
+        assertNotNull(f.getAttribute("latency_reporter.min"));
+        assertNotNull(f.getAttribute("latency_reporter.max"));
+        assertNotNull(f.getAttribute("latency_reporter.avg"));
+        assertNotNull(f.getAttribute("latency_reporter.stdev"));
+        assertNotNull(f.getAttribute("latency_reporter.timestamp"));
         assertEquals("Seconds", f.getAttribute("latency_reporter.units"));
     }
 

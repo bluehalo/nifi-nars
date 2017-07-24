@@ -3,6 +3,7 @@ package com.asymmetrik.nifi.standard.processors.stats;
 import java.util.Map;
 import java.util.Optional;
 
+import com.asymmetrik.nifi.standard.processors.util.MomentAggregator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -49,9 +50,10 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
 
     private volatile String keyName;
 
+
     @Override
     protected void init(ProcessorInitializationContext context) {
-        properties = ImmutableList.of(ATTR_NAME, REPORTING_INTERVAL, BATCH_SIZE);
+        properties = ImmutableList.of(ATTR_NAME, CORRELATION_ATTR, REPORTING_INTERVAL, BATCH_SIZE);
     }
 
     @OnScheduled
