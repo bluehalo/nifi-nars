@@ -175,12 +175,12 @@ public class CalculateLatencyStatisticsTest {
 
         MockFlowFile conwayFlowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(0);
         assertStatAttributesPresent(conwayFlowFile);
-        assertEquals(10, Integer.parseInt(conwayFlowFile.getAttribute("latency_reporter.count")));
+        assertEquals(10, Integer.parseInt(conwayFlowFile.getAttribute("CalculateLatencyStatistics.count")));
         assertEquals("conway", conwayFlowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
 
         MockFlowFile foobarFlowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(1);
         assertStatAttributesPresent(foobarFlowFile);
-        assertEquals(5, Integer.parseInt(foobarFlowFile.getAttribute("latency_reporter.count")));
+        assertEquals(5, Integer.parseInt(foobarFlowFile.getAttribute("CalculateLatencyStatistics.count")));
         assertEquals("victor", foobarFlowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
     }
 
@@ -202,34 +202,34 @@ public class CalculateLatencyStatisticsTest {
 
         MockFlowFile foobarFlowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(0);
         assertStatAttributesPresent(foobarFlowFile);
-        assertEquals(10, Integer.parseInt(foobarFlowFile.getAttribute("latency_reporter.count")));
+        assertEquals(10, Integer.parseInt(foobarFlowFile.getAttribute("CalculateLatencyStatistics.count")));
         assertEquals(DEFAULT_MOMENT_AGGREGATOR_KEY, foobarFlowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
 
         MockFlowFile flowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(1);
         assertStatAttributesPresent(flowFile);
-        assertEquals(10, Integer.parseInt(flowFile.getAttribute("latency_reporter.count")));
+        assertEquals(10, Integer.parseInt(flowFile.getAttribute("CalculateLatencyStatistics.count")));
         assertEquals("foobar", flowFile.getAttribute("AbstractStatsProcessor.correlationKey"));
     }
 
     private void assertStatAttributesPresent(MockFlowFile f) {
-        assertNotNull(f.getAttribute("latency_reporter.count"));
-        assertNotNull(f.getAttribute("latency_reporter.sum"));
-        assertNotNull(f.getAttribute("latency_reporter.min"));
-        assertNotNull(f.getAttribute("latency_reporter.max"));
-        assertNotNull(f.getAttribute("latency_reporter.avg"));
-        assertNotNull(f.getAttribute("latency_reporter.stdev"));
-        assertNotNull(f.getAttribute("latency_reporter.timestamp"));
-        assertEquals("Seconds", f.getAttribute("latency_reporter.units"));
+        assertNotNull(f.getAttribute("CalculateLatencyStatistics.count"));
+        assertNotNull(f.getAttribute("CalculateLatencyStatistics.sum"));
+        assertNotNull(f.getAttribute("CalculateLatencyStatistics.min"));
+        assertNotNull(f.getAttribute("CalculateLatencyStatistics.max"));
+        assertNotNull(f.getAttribute("CalculateLatencyStatistics.avg"));
+        assertNotNull(f.getAttribute("CalculateLatencyStatistics.stdev"));
+        assertNotNull(f.getAttribute("CalculateLatencyStatistics.timestamp"));
+        assertEquals("Seconds", f.getAttribute("CalculateLatencyStatistics.units"));
     }
 
     private void assertStatAttributesNotPresent(MockFlowFile f) {
-        assertNull(f.getAttribute("latency_reporter.count"));
-        assertNull(f.getAttribute("latency_reporter.sum"));
-        assertNull(f.getAttribute("latency_reporter.min"));
-        assertNull(f.getAttribute("latency_reporter.max"));
-        assertNull(f.getAttribute("latency_reporter.avg"));
-        assertNull(f.getAttribute("latency_reporter.stdev"));
-        assertNull(f.getAttribute("latency_reporter.timestamp"));
-        assertNull(f.getAttribute("latency_reporter.units"));
+        assertNull(f.getAttribute("CalculateLatencyStatistics.count"));
+        assertNull(f.getAttribute("CalculateLatencyStatistics.sum"));
+        assertNull(f.getAttribute("CalculateLatencyStatistics.min"));
+        assertNull(f.getAttribute("CalculateLatencyStatistics.max"));
+        assertNull(f.getAttribute("CalculateLatencyStatistics.avg"));
+        assertNull(f.getAttribute("CalculateLatencyStatistics.stdev"));
+        assertNull(f.getAttribute("CalculateLatencyStatistics.timestamp"));
+        assertNull(f.getAttribute("CalculateLatencyStatistics.units"));
     }
 }

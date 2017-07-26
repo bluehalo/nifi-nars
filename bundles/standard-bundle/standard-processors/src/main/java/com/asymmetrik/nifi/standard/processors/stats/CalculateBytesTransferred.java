@@ -35,6 +35,8 @@ import org.apache.nifi.processor.ProcessorInitializationContext;
 })
 public class CalculateBytesTransferred extends AbstractStatsProcessor {
 
+    static final String FILE_SIZE = "fileSize";
+
     @Override
     protected void init(ProcessorInitializationContext context) {
         properties = ImmutableList.of(CORRELATION_ATTR, REPORTING_INTERVAL, BATCH_SIZE);
@@ -48,7 +50,7 @@ public class CalculateBytesTransferred extends AbstractStatsProcessor {
 
     @Override
     protected void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp) {
-        String fileSize = flowFile.getAttribute("fileSize");
+        String fileSize = flowFile.getAttribute(FILE_SIZE);
         Long bytes = Long.valueOf(fileSize);
         aggregator.addValue(bytes.doubleValue());
     }

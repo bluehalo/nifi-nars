@@ -91,14 +91,14 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
             double stdev = aggregator.getStandardDeviation();
 
             Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
-                    .put("latency_reporter.count", Integer.toString(n))
-                    .put("latency_reporter.sum", Double.toString(sum))
-                    .put("latency_reporter.min", Double.toString(min))
-                    .put("latency_reporter.max", Double.toString(max))
-                    .put("latency_reporter.avg", Double.toString(mean))
-                    .put("latency_reporter.stdev", Double.toString(stdev))
-                    .put("latency_reporter.timestamp", Long.toString(currentTimestamp))
-                    .put("latency_reporter.units", "Seconds")
+                    .put("CalculateLatencyStatistics.count", Integer.toString(n))
+                    .put("CalculateLatencyStatistics.sum", Double.toString(sum))
+                    .put("CalculateLatencyStatistics.min", Double.toString(min))
+                    .put("CalculateLatencyStatistics.max", Double.toString(max))
+                    .put("CalculateLatencyStatistics.avg", Double.toString(mean))
+                    .put("CalculateLatencyStatistics.stdev", Double.toString(stdev))
+                    .put("CalculateLatencyStatistics.timestamp", Long.toString(currentTimestamp))
+                    .put("CalculateLatencyStatistics.units", "Seconds")
                     .build();
             return Optional.of(attributes);
 

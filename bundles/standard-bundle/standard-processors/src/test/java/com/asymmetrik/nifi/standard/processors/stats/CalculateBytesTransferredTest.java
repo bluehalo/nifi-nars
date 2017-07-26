@@ -13,16 +13,19 @@ import org.apache.nifi.util.TestRunners;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.asymmetrik.nifi.standard.processors.stats.CalculateBytesTransferred.FILE_SIZE;
 import static org.junit.Assert.assertEquals;
 
 public class CalculateBytesTransferredTest {
+
+    private static final String FLOWID = "flowId";
 
     private TestRunner runner;
 
     @Before
     public void setup() {
         runner = TestRunners.newTestRunner(CalculateBytesTransferred.class);
-        runner.setProperty(CalculateBytesTransferred.CORRELATION_ATTR, "flowId");
+        runner.setProperty(CalculateBytesTransferred.CORRELATION_ATTR, FLOWID);
         runner.setProperty(CalculateBytesTransferred.REPORTING_INTERVAL, "1 s");
         runner.setProperty(CalculateBytesTransferred.BATCH_SIZE, "20");
         runner.assertValid();
@@ -37,7 +40,7 @@ public class CalculateBytesTransferredTest {
         int n = 50;
         for (int i = 0; i < n; i++) {
             FlowFile flowFile = session.create();
-            flowFile = session.putAttribute(flowFile, "fileSize", String.valueOf(i));
+            flowFile = session.putAttribute(flowFile, FILE_SIZE, String.valueOf(i));
             calculateBytesTransferred.updateStats(flowFile, momentAggregator, currentTimeMillis);
         }
         double expected = n * (n - 1) / 2;
@@ -54,8 +57,8 @@ public class CalculateBytesTransferredTest {
         int n = 20;
         for (int i = 0; i < n; i++) {
             Map<String, String> attributes = new HashMap<>();
-            attributes.put("fileSize", i % 2 == 0 ? "a" : String.valueOf(i));
-            attributes.put("flowId", "foobar");
+            attributes.put(FILE_SIZE, i % 2 == 0 ? "a" : String.valueOf(i));
+            attributes.put(FLOWID, "foobar");
             runner.enqueue(data, attributes);
         }
         runner.run();
