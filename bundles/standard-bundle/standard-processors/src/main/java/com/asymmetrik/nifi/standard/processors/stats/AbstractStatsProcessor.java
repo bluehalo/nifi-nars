@@ -120,7 +120,14 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
                 aggregator = new MomentAggregator();
                 momentsMap.put(correlationAttr, aggregator);
             }
-            updateStats(flowFile, aggregator, currentTimestamp);
+
+            try {
+                updateStats(flowFile, aggregator, currentTimestamp);
+            } catch (Exception e) {
+                getLogger().warn("Unable to update statistics", e);
+                session.remove(flowFile);
+                continue;
+            }
 
             Optional<Map<String, String>> stats = latestStats.get(correlationAttr);
             if (null == stats) {

@@ -57,7 +57,7 @@ public class CalculateVolumeStatistics extends AbstractStatsProcessor {
 
     @Override
     protected void init(ProcessorInitializationContext context) {
-        properties = ImmutableList.of(BUCKET_INTERVAL, REPORTING_INTERVAL, BATCH_SIZE);
+        properties = ImmutableList.of(BUCKET_INTERVAL, CORRELATION_ATTR, REPORTING_INTERVAL, BATCH_SIZE);
     }
 
     @OnScheduled
