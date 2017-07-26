@@ -9,5 +9,6 @@ com.asymmetrik.nifi.standard.processors.InspectZipContents
 com.asymmetrik.nifi.standard.processors.Md5HashAttributes
 com.asymmetrik.nifi.standard.processors.PutScp
 com.asymmetrik.nifi.standard.processors.RouteOnBackPressure
+com.asymmetrik.nifi.standard.processors.stats.CalculateBytesTransferred
 com.asymmetrik.nifi.standard.processors.stats.CalculateLatencyStatistics
 com.asymmetrik.nifi.standard.processors.stats.CalculateVolumeStatistics
