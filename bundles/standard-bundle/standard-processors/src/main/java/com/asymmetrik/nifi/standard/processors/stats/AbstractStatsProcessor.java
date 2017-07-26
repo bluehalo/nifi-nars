@@ -37,7 +37,9 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
             .name("statistics")
             .description("Empty flowfiles with statistics as flowfiles attributes are written to this relationship")
             .build();
-
+    /**
+     * Property Descriptors
+     */
     static final PropertyDescriptor BATCH_SIZE = new PropertyDescriptor.Builder()
             .name("Batch Size")
             .description("The maximum number of flowfiles to take from the incoming work queue.")
@@ -45,11 +47,9 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
             .addValidator(StandardValidators.POSITIVE_INTEGER_VALIDATOR)
             .required(true)
             .build();
-    /**
-     * Property Descriptors
-     */
+
     static final PropertyDescriptor CORRELATION_ATTR = new PropertyDescriptor.Builder()
-            .name("correlation_attr")
+            .name("correlation")
             .displayName("Correlation Attribute")
             .description("The attribute used to correlate events. If this property is set, event with " +
                     "the same value of the correlation attribute will be grouped prior to computing statistics.")
@@ -58,7 +58,8 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
             .build();
     static final PropertyDescriptor REPORTING_INTERVAL = new PropertyDescriptor.Builder()
-            .name("Reporting Interval")
+            .name("report_interval")
+            .displayName("Reporting Interval")
             .description("Indicates how often this processor should report statistics.")
             .required(true)
             .addValidator(StandardValidators.TIME_PERIOD_VALIDATOR)
