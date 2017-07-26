@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -17,6 +18,7 @@ import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.PropertyValue;
 import org.apache.nifi.flowfile.FlowFile;
+import org.apache.nifi.flowfile.attributes.CoreAttributes;
 import org.apache.nifi.processor.AbstractProcessor;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
@@ -108,7 +110,7 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
         List<FlowFile> outgoing = new ArrayList<>();
 
-        Map<String, String> attributes = new HashMap<>();
+        Map<String, String> attributes;
         for (FlowFile flowFile : incoming) {
             attributes = flowFile.getAttributes();
             String key = StringUtils.isEmpty(correlationKey) ? DEFAULT_MOMENT_AGGREGATOR_KEY : correlationKey;
@@ -137,14 +139,14 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
             session.transfer(outgoing, REL_ORIGINAL);
         }
 
-        sendStatsIfPresent(session, new HashMap<>(attributes), currentTimestamp);
+        sendStatsIfPresent(session, currentTimestamp);
     }
 
     /**
      * Send a flowfile with the stats as attributes: IF the report time is exceeded AND there are
      * stats to send
      */
-    private void sendStatsIfPresent(ProcessSession session, Map<String, String> attributes, long currentTimestamp) {
+    private void sendStatsIfPresent(ProcessSession session, long currentTimestamp) {
         if (currentTimestamp < lastReportTime + reportingIntervalMillis) {
             return;
         }
@@ -156,10 +158,11 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
             if (result.isPresent()) {
                 Map<String, String> attrs = new HashMap<>(result.get());
                 attrs.put("AbstractStatsProcessor.correlationKey", statsMapKey);
-                attributes.putAll(attrs);
-
+                String uuid = UUID.randomUUID().toString();
+                attrs.put(CoreAttributes.UUID.key(), uuid);
+                attrs.put(CoreAttributes.FILENAME.key(), statsMapKey + "_" + System.currentTimeMillis() + "_" + uuid);
                 FlowFile statsFlowFile = session.create();
-                statsFlowFile = session.putAllAttributes(statsFlowFile, attributes);
+                statsFlowFile = session.putAllAttributes(statsFlowFile, attrs);
                 session.getProvenanceReporter().create(statsFlowFile);
                 session.transfer(statsFlowFile, REL_STATS);
             }
