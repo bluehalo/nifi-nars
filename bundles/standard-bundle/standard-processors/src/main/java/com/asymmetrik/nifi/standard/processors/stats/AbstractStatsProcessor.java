@@ -28,6 +28,9 @@ import org.apache.nifi.processor.util.StandardValidators;
 public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
     static final String DEFAULT_MOMENT_AGGREGATOR_KEY = "";
+    static final String SECONDS = "Seconds";
+    static final String BYTES = "Bytes";
+    static final String COUNT_PER_SECOND = "Count/Second";
     /**
      * Relationship Descriptors
      */
@@ -120,7 +123,14 @@ public abstract class AbstractStatsProcessor extends AbstractProcessor {
                 aggregator = new MomentAggregator();
                 momentsMap.put(correlationAttr, aggregator);
             }
-            updateStats(flowFile, aggregator, currentTimestamp);
+
+            try {
+                updateStats(flowFile, aggregator, currentTimestamp);
+            } catch (Exception e) {
+                getLogger().warn("Unable to update statistics", e);
+                session.remove(flowFile);
+                continue;
+            }
 
             Optional<Map<String, String>> stats = latestStats.get(correlationAttr);
             if (null == stats) {

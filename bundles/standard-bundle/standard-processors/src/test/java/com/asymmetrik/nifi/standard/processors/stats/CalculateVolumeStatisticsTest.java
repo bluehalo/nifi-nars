@@ -49,10 +49,10 @@ public class CalculateVolumeStatisticsTest {
         MockFlowFile flowFile = runner.getFlowFilesForRelationship(AbstractStatsProcessor.REL_STATS).get(0);
         assertEquals(0, flowFile.getSize());
         assertStatAttributesPresent(flowFile);
-        assertEquals(1, Integer.parseInt(flowFile.getAttribute("volume_statistics.count")));
-        assertEquals(1, Integer.parseInt(flowFile.getAttribute("volume_statistics.min")));
-        assertEquals(1, Integer.parseInt(flowFile.getAttribute("volume_statistics.max")));
-        assertEquals(1, Integer.parseInt(flowFile.getAttribute("volume_statistics.avg")));
+        assertEquals(1, Integer.parseInt(flowFile.getAttribute("CalculateVolumeStatistics.count")));
+        assertEquals(1, Integer.parseInt(flowFile.getAttribute("CalculateVolumeStatistics.min")));
+        assertEquals(1, Integer.parseInt(flowFile.getAttribute("CalculateVolumeStatistics.max")));
+        assertEquals(1, Integer.parseInt(flowFile.getAttribute("CalculateVolumeStatistics.avg")));
     }
 
     @Test
@@ -108,13 +108,13 @@ public class CalculateVolumeStatisticsTest {
     }
 
     private void assertStatAttributesPresent(MockFlowFile f) {
-        assertNotNull(Integer.parseInt(f.getAttribute("volume_statistics.count")));
-        assertNotNull(Integer.parseInt(f.getAttribute("volume_statistics.sum")));
-        assertNotNull(Integer.parseInt(f.getAttribute("volume_statistics.min")));
-        assertNotNull(Integer.parseInt(f.getAttribute("volume_statistics.max")));
-        assertNotNull(Integer.parseInt(f.getAttribute("volume_statistics.avg")));
-        assertNotNull(Double.parseDouble(f.getAttribute("volume_statistics.stdev")));
-        assertNotNull(Long.parseLong(f.getAttribute("volume_statistics.timestamp")));
-        assertEquals("Count/Second", f.getAttribute("volume_statistics.units"));
+        assertNotNull(Integer.parseInt(f.getAttribute("CalculateVolumeStatistics.count")));
+        assertNotNull(Integer.parseInt(f.getAttribute("CalculateVolumeStatistics.sum")));
+        assertNotNull(Integer.parseInt(f.getAttribute("CalculateVolumeStatistics.min")));
+        assertNotNull(Integer.parseInt(f.getAttribute("CalculateVolumeStatistics.max")));
+        assertNotNull(Integer.parseInt(f.getAttribute("CalculateVolumeStatistics.avg")));
+        assertNotNull(Double.parseDouble(f.getAttribute("CalculateVolumeStatistics.stdev")));
+        assertNotNull(Long.parseLong(f.getAttribute("CalculateVolumeStatistics.timestamp")));
+        assertEquals("Count/Second", f.getAttribute("CalculateVolumeStatistics.units"));
     }
 }

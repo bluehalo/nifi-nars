@@ -27,13 +27,14 @@ import org.apache.nifi.processor.util.StandardValidators;
 @Tags({"asymmetrik", "latency", "monitoring", "statistics"})
 @CapabilityDescription("Calculates latency statistics for a flow.")
 @WritesAttributes({
-        @WritesAttribute(attribute = "latency_reporter.count"),
-        @WritesAttribute(attribute = "latency_reporter.sum"),
-        @WritesAttribute(attribute = "latency_reporter.min"),
-        @WritesAttribute(attribute = "latency_reporter.max"),
-        @WritesAttribute(attribute = "latency_reporter.avg"),
-        @WritesAttribute(attribute = "latency_reporter.stdev"),
-        @WritesAttribute(attribute = "latency_reporter.timestamp")
+        @WritesAttribute(attribute = "AbstractStatsProcessor.correlationKey"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.count"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.sum"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.min"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.max"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.avg"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.stdev"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.timestamp")
 })
 public class CalculateLatencyStatistics extends AbstractStatsProcessor {
 
@@ -91,14 +92,14 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
             double stdev = aggregator.getStandardDeviation();
 
             Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
-                    .put("latency_reporter.count", Integer.toString(n))
-                    .put("latency_reporter.sum", Double.toString(sum))
-                    .put("latency_reporter.min", Double.toString(min))
-                    .put("latency_reporter.max", Double.toString(max))
-                    .put("latency_reporter.avg", Double.toString(mean))
-                    .put("latency_reporter.stdev", Double.toString(stdev))
-                    .put("latency_reporter.timestamp", Long.toString(currentTimestamp))
-                    .put("latency_reporter.units", "Seconds")
+                    .put("CalculateLatencyStatistics.count", Integer.toString(n))
+                    .put("CalculateLatencyStatistics.sum", Double.toString(sum))
+                    .put("CalculateLatencyStatistics.min", Double.toString(min))
+                    .put("CalculateLatencyStatistics.max", Double.toString(max))
+                    .put("CalculateLatencyStatistics.avg", Double.toString(mean))
+                    .put("CalculateLatencyStatistics.stdev", Double.toString(stdev))
+                    .put("CalculateLatencyStatistics.timestamp", Long.toString(currentTimestamp))
+                    .put("CalculateLatencyStatistics.units", SECONDS)
                     .build();
             return Optional.of(attributes);
 
