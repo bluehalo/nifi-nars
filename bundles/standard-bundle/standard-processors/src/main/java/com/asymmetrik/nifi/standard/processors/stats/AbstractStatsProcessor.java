@@ -28,6 +28,9 @@ import org.apache.nifi.processor.util.StandardValidators;
 public abstract class AbstractStatsProcessor extends AbstractProcessor {
 
     static final String DEFAULT_MOMENT_AGGREGATOR_KEY = "";
+    static final String SECONDS = "Seconds";
+    static final String BYTES = "Bytes";
+    static final String COUNT_PER_SECOND = "Count/Second";
     /**
      * Relationship Descriptors
      */

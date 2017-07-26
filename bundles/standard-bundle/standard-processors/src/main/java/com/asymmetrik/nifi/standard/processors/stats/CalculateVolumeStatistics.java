@@ -29,14 +29,15 @@ import org.apache.nifi.processor.util.StandardValidators;
 @Tags({"asymmetrik", "volume", "monitoring", "statistics"})
 @CapabilityDescription("Calculates volume statistics for a flow.")
 @WritesAttributes({
-        @WritesAttribute(attribute = "volume_statistics.count"),
-        @WritesAttribute(attribute = "volume_statistics.sum"),
-        @WritesAttribute(attribute = "volume_statistics.min"),
-        @WritesAttribute(attribute = "volume_statistics.max"),
-        @WritesAttribute(attribute = "volume_statistics.avg"),
-        @WritesAttribute(attribute = "volume_statistics.stdev"),
-        @WritesAttribute(attribute = "volume_statistics.units"),
-        @WritesAttribute(attribute = "volume_statistics.timestamp")
+        @WritesAttribute(attribute = "AbstractStatsProcessor.correlationKey"),
+        @WritesAttribute(attribute = "CalculateVolumeStatistics.count"),
+        @WritesAttribute(attribute = "CalculateVolumeStatistics.sum"),
+        @WritesAttribute(attribute = "CalculateVolumeStatistics.min"),
+        @WritesAttribute(attribute = "CalculateVolumeStatistics.max"),
+        @WritesAttribute(attribute = "CalculateVolumeStatistics.avg"),
+        @WritesAttribute(attribute = "CalculateVolumeStatistics.stdev"),
+        @WritesAttribute(attribute = "CalculateVolumeStatistics.units"),
+        @WritesAttribute(attribute = "CalculateVolumeStatistics.timestamp")
 })
 public class CalculateVolumeStatistics extends AbstractStatsProcessor {
 
@@ -89,14 +90,14 @@ public class CalculateVolumeStatistics extends AbstractStatsProcessor {
             Double stdev = 1000.0 * aggregator.getStandardDeviation() / bucket;
 
             Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
-                    .put("volume_statistics.count", Integer.toString(aggregator.getN()))
-                    .put("volume_statistics.sum", Integer.toString((int) aggregator.getSum()))
-                    .put("volume_statistics.min", Integer.toString(min.intValue()))
-                    .put("volume_statistics.max", Integer.toString(max.intValue()))
-                    .put("volume_statistics.avg", Integer.toString(avg.intValue()))
-                    .put("volume_statistics.stdev", stdev.toString())
-                    .put("volume_statistics.timestamp", Long.toString(currentTimestamp))
-                    .put("volume_statistics.units", "Count/Second")
+                    .put("CalculateVolumeStatistics.count", Integer.toString(aggregator.getN()))
+                    .put("CalculateVolumeStatistics.sum", Integer.toString((int) aggregator.getSum()))
+                    .put("CalculateVolumeStatistics.min", Integer.toString(min.intValue()))
+                    .put("CalculateVolumeStatistics.max", Integer.toString(max.intValue()))
+                    .put("CalculateVolumeStatistics.avg", Integer.toString(avg.intValue()))
+                    .put("CalculateVolumeStatistics.stdev", stdev.toString())
+                    .put("CalculateVolumeStatistics.timestamp", Long.toString(currentTimestamp))
+                    .put("CalculateVolumeStatistics.units", COUNT_PER_SECOND)
                     .build();
 
             return Optional.of(attributes);

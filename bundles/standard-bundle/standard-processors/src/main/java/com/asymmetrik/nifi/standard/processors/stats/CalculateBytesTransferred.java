@@ -25,6 +25,7 @@ import org.apache.nifi.processor.ProcessorInitializationContext;
 @Tags({"asymmetrik", "bytes", "monitoring", "statistics"})
 @CapabilityDescription("Calculates latency statistics for a flow.")
 @WritesAttributes({
+        @WritesAttribute(attribute = "AbstractStatsProcessor.correlationKey"),
         @WritesAttribute(attribute = "CalculateBytesTransferred.count"),
         @WritesAttribute(attribute = "CalculateBytesTransferred.sum"),
         @WritesAttribute(attribute = "CalculateBytesTransferred.min"),
@@ -59,26 +60,19 @@ public class CalculateBytesTransferred extends AbstractStatsProcessor {
     protected Optional<Map<String, String>> buildStatAttributes(long currentTimestamp, MomentAggregator aggregator) {
 
         // emit stats only if there is data
-        if (aggregator.getN() > 0) {
-            int n = aggregator.getN();
-            double sum = aggregator.getSum();
-            double min = aggregator.getMin();
-            double max = aggregator.getMax();
-            double mean = aggregator.getMean();
-            double stdev = aggregator.getStandardDeviation();
-
+        int n = aggregator.getN();
+        if (n > 0) {
             Map<String, String> attributes = new ImmutableMap.Builder<String, String>()
-                    .put("CalculateBytesTransferred.count", Integer.toString(n))
-                    .put("CalculateBytesTransferred.sum", Double.toString(sum))
-                    .put("CalculateBytesTransferred.min", Double.toString(min))
-                    .put("CalculateBytesTransferred.max", Double.toString(max))
-                    .put("CalculateBytesTransferred.avg", Double.toString(mean))
-                    .put("CalculateBytesTransferred.stdev", Double.toString(stdev))
+                    .put("CalculateBytesTransferred.count", Integer.toString(aggregator.getN()))
+                    .put("CalculateBytesTransferred.sum", Double.toString(aggregator.getSum()))
+                    .put("CalculateBytesTransferred.min", Double.toString(aggregator.getMin()))
+                    .put("CalculateBytesTransferred.max", Double.toString(aggregator.getMax()))
+                    .put("CalculateBytesTransferred.avg", Double.toString(aggregator.getMean()))
+                    .put("CalculateBytesTransferred.stdev", Double.toString(aggregator.getStandardDeviation()))
                     .put("CalculateBytesTransferred.timestamp", Long.toString(currentTimestamp))
-                    .put("CalculateBytesTransferred.units", "Seconds")
+                    .put("CalculateBytesTransferred.units", BYTES)
                     .build();
             return Optional.of(attributes);
-
         } else {
             return Optional.empty();
         }

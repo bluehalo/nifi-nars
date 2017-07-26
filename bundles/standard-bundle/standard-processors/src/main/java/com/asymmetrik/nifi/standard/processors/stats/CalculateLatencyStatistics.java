@@ -27,13 +27,14 @@ import org.apache.nifi.processor.util.StandardValidators;
 @Tags({"asymmetrik", "latency", "monitoring", "statistics"})
 @CapabilityDescription("Calculates latency statistics for a flow.")
 @WritesAttributes({
-        @WritesAttribute(attribute = "latency_reporter.count"),
-        @WritesAttribute(attribute = "latency_reporter.sum"),
-        @WritesAttribute(attribute = "latency_reporter.min"),
-        @WritesAttribute(attribute = "latency_reporter.max"),
-        @WritesAttribute(attribute = "latency_reporter.avg"),
-        @WritesAttribute(attribute = "latency_reporter.stdev"),
-        @WritesAttribute(attribute = "latency_reporter.timestamp")
+        @WritesAttribute(attribute = "AbstractStatsProcessor.correlationKey"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.count"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.sum"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.min"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.max"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.avg"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.stdev"),
+        @WritesAttribute(attribute = "CalculateLatencyStatistics.timestamp")
 })
 public class CalculateLatencyStatistics extends AbstractStatsProcessor {
 
@@ -98,7 +99,7 @@ public class CalculateLatencyStatistics extends AbstractStatsProcessor {
                     .put("CalculateLatencyStatistics.avg", Double.toString(mean))
                     .put("CalculateLatencyStatistics.stdev", Double.toString(stdev))
                     .put("CalculateLatencyStatistics.timestamp", Long.toString(currentTimestamp))
-                    .put("CalculateLatencyStatistics.units", "Seconds")
+                    .put("CalculateLatencyStatistics.units", SECONDS)
                     .build();
             return Optional.of(attributes);
 
