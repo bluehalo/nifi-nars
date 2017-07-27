@@ -51,9 +51,7 @@ public class CalculateBytesTransferred extends AbstractStatsProcessor {
 
     @Override
     protected void updateStats(FlowFile flowFile, MomentAggregator aggregator, long currentTimestamp) {
-        String fileSize = flowFile.getAttribute(FILE_SIZE);
-        Long bytes = Long.valueOf(fileSize);
-        aggregator.addValue(bytes.doubleValue());
+        aggregator.addValue(flowFile.getSize());
     }
 
     @Override
