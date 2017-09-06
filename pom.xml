@@ -6,7 +6,7 @@
     <groupId>com.asymmetrik.nifi</groupId>
     <artifactId>nifi-nars</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.4.0</version>
 
     <modules>
         <module>bundles</module>
@@ -212,7 +212,7 @@
     <scm>
         <connection>scm:git:git@github.com:Asymmetrik/nifi-nars.git</connection>
         <developerConnection>scm:git:git@github.com:Asymmetrik/nifi-nars.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>nifi-nars-0.4.0</tag>
         <url>https://github.com/Asymmetrik</url>
     </scm>
 
