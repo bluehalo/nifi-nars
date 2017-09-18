@@ -1,3 +1,6 @@
+# NOTE: THIS REPO HAS BEEN REPLACED BY [nifi-nar-bundles](https://github.com/Asymmetrik/nifi-nar-bundles)
+nifi-nar-bundles contains code updates as well as additions to this repo.
+
 # nifi-nars
 
 This project contains assorted [Apache NiFi](http://nifi.apache.org/) components.
